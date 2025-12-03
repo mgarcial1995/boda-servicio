@@ -46,10 +46,16 @@ export async function getGuestByCode(req, res) {
 
 export async function confirmAttendance(req, res) {
   try {
-    const { code, attending, gifts, other_gift } = req.body;
-    console.log(req.body);
+    const { code, attending, gifts, other_gift, dedication } = req.body;
 
-    const result = await confirmGuestService(code, attending, gifts, other_gift);
+    const result = await confirmGuestService(
+      code,
+      attending,
+      gifts,
+      other_gift,
+      dedication
+    );
+
     if (!result)
       return res.status(404).json({ error: "Invitado no encontrado" });
 

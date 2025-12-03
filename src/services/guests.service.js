@@ -41,15 +41,17 @@ export async function confirmGuestService(
   code,
   attending,
   gifts = [],
-  other_gift = null
+  other_gift = null,
+  dedication = null
 ) {
-  // 1. Actualizar asistencia + el texto de "otro regalo"
+  // 1. Actualizar asistencia + textos opcionales
   const { data: guest, error: guestError } = await supabase
     .from("guests")
     .update({
       attending,
       confirmed_at: new Date().toISOString(),
-      other_gift: other_gift,
+      other_gift: other_gift ?? null,
+      dedication: dedication ?? null
     })
     .eq("code", code)
     .select()
@@ -57,7 +59,7 @@ export async function confirmGuestService(
 
   if (guestError || !guest) return null;
 
-  // 2. Registrar regalos normales (pero NO "otros")
+  // 2. Registrar regalos normales
   if (Array.isArray(gifts) && gifts.length > 0) {
     for (const giftId of gifts) {
       const { data: gift } = await supabase
@@ -72,7 +74,7 @@ export async function confirmGuestService(
         .from("gifts")
         .update({
           status: "selected",
-          selected_by_guest_id: guest.id,
+          selected_by_guest_id: guest.id
         })
         .eq("id", giftId);
     }
