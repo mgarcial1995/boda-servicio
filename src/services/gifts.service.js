@@ -27,7 +27,6 @@ export async function getGiftsService() {
 }
 
 export async function selectGiftService({ code, gift_id }) {
-  // Verificar invitado
   const { data: guest } = await supabase
     .from("guests")
     .select("id")
@@ -36,7 +35,6 @@ export async function selectGiftService({ code, gift_id }) {
 
   if (!guest) throw new Error("Invitado no encontrado");
 
-  // Verificar regalo disponible
   const { data: gift } = await supabase
     .from("gifts")
     .select("*")
@@ -49,7 +47,6 @@ export async function selectGiftService({ code, gift_id }) {
     throw new Error("Regalo ya elegido");
   }
 
-  // Actualizar estado
   const { data, error } = await supabase
     .from("gifts")
     .update({
@@ -65,3 +62,25 @@ export async function selectGiftService({ code, gift_id }) {
   return data;
 }
 
+// 🔥 NUEVO SERVICIO
+export async function getGiftsByGuestService(code) {
+
+  // 1. Buscar al invitado por código
+  const { data: guest, error: guestError } = await supabase
+    .from("guests")
+    .select("id")
+    .eq("code", code)
+    .single();
+
+  if (guestError || !guest) return null;
+
+  // 2. Traer los regalos asignados a ese invitado
+  const { data: gifts, error: giftsError } = await supabase
+    .from("gifts")
+    .select("id, name, description, status")
+    .eq("selected_by_guest_id", guest.id);
+
+  if (giftsError) throw new Error(giftsError.message);
+
+  return gifts;
+}

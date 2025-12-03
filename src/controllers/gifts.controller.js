@@ -1,7 +1,8 @@
 import {
   createGiftService,
   getGiftsService,
-  selectGiftService
+  selectGiftService,
+  getGiftsByGuestService
 } from "../services/gifts.service.js";
 
 export async function createGift(req, res) {
@@ -39,14 +40,17 @@ export async function selectGift(req, res) {
   }
 }
 
-export async function confirmAttendance(req, res) {
+// 🔥 NUEVO CONTROLADOR
+export async function getGiftsByGuest(req, res) {
   try {
-    const { code, attending, gifts } = req.body;
+    const { code } = req.params;
+    const result = await getGiftsByGuestService(code);
 
-    const result = await confirmGuestService(code, attending, gifts);
-    if (!result) return res.status(404).json({ error: "Invitado no encontrado" });
+    if (!result) {
+      return res.status(404).json({ error: "Invitado no encontrado o sin regalos" });
+    }
 
-    return res.json(result);
+    res.json({ gifts: result });
 
   } catch (error) {
     res.status(500).json({ error: error.message });

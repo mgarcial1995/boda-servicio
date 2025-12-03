@@ -80,3 +80,34 @@ export async function confirmGuestService(code, attending, gifts = []) {
   return guest;
 }
 
+export async function getAllGuestsService() {
+  const { data, error } = await supabase
+    .from("guests")
+    .select("*")
+    .order("created_at", { ascending: true });
+
+  if (error) throw new Error(error.message);
+
+  return data;
+}
+
+export async function getAllGuestsWithGiftsService() {
+  const { data: guests, error } = await supabase
+    .from("guests")
+    .select("*")
+    .order("created_at", { ascending: true });
+
+  if (error) throw new Error(error.message);
+
+  // Obtener regalos por invitado
+  for (const guest of guests) {
+    const { data: gifts } = await supabase
+      .from("gifts")
+      .select("id, name, description")
+      .eq("selected_by_guest_id", guest.id);
+
+    guest.gifts = gifts || [];
+  }
+
+  return guests;
+}
