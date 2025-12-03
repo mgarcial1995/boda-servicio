@@ -17,7 +17,7 @@ export async function createGuestService(body) {
       email: body.email || null,
       is_family: body.is_family,
       code,
-      link_invitation
+      link_invitation,
     })
     .select()
     .single();
@@ -37,13 +37,19 @@ export async function getGuestByCodeService(code) {
   return data;
 }
 
-export async function confirmGuestService(code, attending, gifts = []) {
-  // 1. Actualizar asistencia
+export async function confirmGuestService(
+  code,
+  attending,
+  gifts = [],
+  other_gift = null
+) {
+  // 1. Actualizar asistencia + el texto de "otro regalo"
   const { data: guest, error: guestError } = await supabase
     .from("guests")
     .update({
       attending,
-      confirmed_at: new Date().toISOString()
+      confirmed_at: new Date().toISOString(),
+      other_gift: other_gift,
     })
     .eq("code", code)
     .select()
@@ -51,27 +57,22 @@ export async function confirmGuestService(code, attending, gifts = []) {
 
   if (guestError || !guest) return null;
 
-  // 2. Procesar regalos seleccionados (si envían lista)
+  // 2. Registrar regalos normales (pero NO "otros")
   if (Array.isArray(gifts) && gifts.length > 0) {
     for (const giftId of gifts) {
-
-      // verificar regalo disponible
-      const { data: gift, error: giftError } = await supabase
+      const { data: gift } = await supabase
         .from("gifts")
         .select("*")
         .eq("id", giftId)
         .single();
 
-      if (giftError || !gift) continue; // skip si no existe
+      if (!gift || gift.status !== "available") continue;
 
-      if (gift.status !== "available") continue; // skip si ya está tomado
-
-      // actualizar regalo
       await supabase
         .from("gifts")
         .update({
           status: "selected",
-          selected_by_guest_id: guest.id
+          selected_by_guest_id: guest.id,
         })
         .eq("id", giftId);
     }

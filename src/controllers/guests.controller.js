@@ -46,9 +46,10 @@ export async function getGuestByCode(req, res) {
 
 export async function confirmAttendance(req, res) {
   try {
-    const { code, attending, gifts } = req.body;
+    const { code, attending, gifts, other_gift } = req.body;
+    console.log(req.body);
 
-    const result = await confirmGuestService(code, attending, gifts);
+    const result = await confirmGuestService(code, attending, gifts, other_gift);
     if (!result)
       return res.status(404).json({ error: "Invitado no encontrado" });
 
@@ -82,6 +83,7 @@ export async function exportGuestsExcel(req, res) {
       { header: "Es familia?", key: "is_family", width: 12 },
       { header: "Asistencia", key: "attending", width: 12 },
       { header: "Regalos", key: "gifts", width: 40 },
+      { header: "Otro regalo", key: "other_gift", width: 40 },
       { header: "Link Invitación", key: "link_invitation", width: 50 },
       { header: "Confirmado el", key: "confirmed_at", width: 25 },
     ];
@@ -103,6 +105,7 @@ export async function exportGuestsExcel(req, res) {
             : "Ninguno",
         link_invitation: guest.link_invitation,
         confirmed_at: guest.confirmed_at || "",
+        other_gift: guest.other_gift || "",
       });
     });
 
