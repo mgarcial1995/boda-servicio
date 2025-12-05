@@ -62,6 +62,23 @@ export async function confirmGuestService(
   return guest;
 }
 
+export async function updateDedicationService(code, dedication) {
+  const { data, error } = await supabase
+    .from("guests")
+    .update({
+      dedication: dedication ?? null,
+      confirmed_at: new Date().toISOString() // opcional: registra fecha de actualización
+    })
+    .eq("code", code)
+    .select()
+    .single();
+
+  if (error) return null;
+
+  return data;
+}
+
+
 export async function getAllGuestsService() {
   const { data, error } = await supabase
     .from("guests")

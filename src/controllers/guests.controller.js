@@ -4,6 +4,7 @@ import {
   confirmGuestService,
   getAllGuestsService,
   getAllGuestsWithGiftsService,
+  updateDedicationService
 } from "../services/guests.service.js";
 
 import ExcelJS from "exceljs";
@@ -60,6 +61,29 @@ export async function confirmAttendance(req, res) {
       return res.status(404).json({ error: "Invitado no encontrado" });
 
     return res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
+
+export async function updateDedication(req, res) {
+  try {
+    const { code, dedication } = req.body;
+
+    if (!code) {
+      return res.status(400).json({ error: "Se requiere el código del invitado." });
+    }
+
+    const result = await updateDedicationService(code, dedication);
+
+    if (!result)
+      return res.status(404).json({ error: "Invitado no encontrado" });
+
+    return res.json({
+      message: "Dedicatoria actualizada correctamente",
+      guest: result,
+    });
+
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
