@@ -3,7 +3,7 @@ import {
   getGuestByCodeService,
   confirmGuestService,
   getAllGuestsService,
-  getAllGuestsWithGiftsService
+  getAllGuestsWithGiftsService,
 } from "../services/guests.service.js";
 
 import ExcelJS from "exceljs";
@@ -55,7 +55,7 @@ export async function confirmAttendance(req, res) {
       other_gift,
       dedication
     );
-
+    console.log(req.body);
     if (!result)
       return res.status(404).json({ error: "Invitado no encontrado" });
 
@@ -92,6 +92,7 @@ export async function exportGuestsExcel(req, res) {
       { header: "Otro regalo", key: "other_gift", width: 40 },
       { header: "Link Invitación", key: "link_invitation", width: 50 },
       { header: "Confirmado el", key: "confirmed_at", width: 25 },
+      { header: "Regalos Seleccionados", key: "gifts_selected", width: 30 },
     ];
 
     // Agregar filas
@@ -112,6 +113,9 @@ export async function exportGuestsExcel(req, res) {
         link_invitation: guest.link_invitation,
         confirmed_at: guest.confirmed_at || "",
         other_gift: guest.other_gift || "",
+        gifts_selected: guest.gifts_selected
+          ? guest.gifts_selected.join(", ")
+          : "",
       });
     });
 
@@ -128,7 +132,6 @@ export async function exportGuestsExcel(req, res) {
     // Enviar Excel directo
     await workbook.xlsx.write(res);
     res.end();
-
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

@@ -44,41 +44,20 @@ export async function confirmGuestService(
   other_gift = null,
   dedication = null
 ) {
-  // 1. Actualizar asistencia + textos opcionales
   const { data: guest, error: guestError } = await supabase
     .from("guests")
     .update({
       attending,
       confirmed_at: new Date().toISOString(),
       other_gift: other_gift ?? null,
-      dedication: dedication ?? null
+      dedication: dedication ?? null,
+      gifts_selected: gifts.length > 0 ? gifts : null
     })
     .eq("code", code)
     .select()
     .single();
 
   if (guestError || !guest) return null;
-
-  // 2. Registrar regalos normales
-  if (Array.isArray(gifts) && gifts.length > 0) {
-    for (const giftId of gifts) {
-      const { data: gift } = await supabase
-        .from("gifts")
-        .select("*")
-        .eq("id", giftId)
-        .single();
-
-      if (!gift || gift.status !== "available") continue;
-
-      await supabase
-        .from("gifts")
-        .update({
-          status: "selected",
-          selected_by_guest_id: guest.id
-        })
-        .eq("id", giftId);
-    }
-  }
 
   return guest;
 }
