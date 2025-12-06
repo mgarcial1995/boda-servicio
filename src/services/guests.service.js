@@ -80,14 +80,36 @@ export async function updateDedicationService(code, dedication) {
 
 
 export async function getAllGuestsService() {
-  const { data, error } = await supabase
+ const { data: guests, error: guestsError } = await supabase
     .from("guests")
     .select("*")
     .order("created_at", { ascending: true });
 
-  if (error) throw new Error(error.message);
+  if (guestsError) throw new Error(guestsError.message);
 
-  return data;
+  // 2. Si no hay invitados retornamos vacío
+  if (!guests || guests.length === 0) return [];
+
+  // 3. Traer TODOS los regalos una sola vez
+  const { data: allGifts, error: giftsError } = await supabase
+    .from("gifts")
+    .select("id, name, description");
+
+  if (giftsError) throw new Error(giftsError.message);
+
+  // 4. Mapear regalos seleccionados por cada invitado
+  return guests.map((guest) => {
+    const selectedGiftIds = guest.gifts_selected || [];
+
+    const selectedGifts = selectedGiftIds.map((id) =>
+      allGifts.find((gift) => gift.id === id)
+    );
+
+    return {
+      ...guest,
+      gifts_selected_details: selectedGifts.filter(Boolean),
+    };
+  });
 }
 
 export async function getAllGuestsWithGiftsService() {
